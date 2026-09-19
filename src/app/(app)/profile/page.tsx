@@ -154,8 +154,13 @@ export default function ProfilePage() {
     setTheme(newTheme);
     localStorage.setItem('gympilot_mode', newMode);
     localStorage.setItem('gympilot_theme', newTheme);
-    const modeClass = newMode === 'dark' ? 'dark' : '';
-    document.documentElement.className = `${modeClass} ${newTheme} font-sans antialiased h-full`.trim();
+    
+    const html = document.documentElement;
+    const allThemes = THEMES.map(t => t.id);
+    html.classList.remove('dark', ...allThemes);
+    
+    if (newMode === 'dark') html.classList.add('dark');
+    if (newTheme) html.classList.add(newTheme);
   };
 
   function handleSave() {
@@ -455,7 +460,7 @@ export default function ProfilePage() {
           <div>
             <label className="text-xs font-bold text-muted-foreground block mb-1">Athlete Name</label>
             <Input
-              value={profile.name || ''}
+              value={profile.name ?? ''}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               className="bg-background border-border text-foreground font-semibold"
             />
@@ -464,8 +469,8 @@ export default function ProfilePage() {
             <label className="text-xs font-bold text-muted-foreground block mb-1">Age</label>
             <Input
               type="number"
-              value={profile.age || 25}
-              onChange={(e) => setProfile({ ...profile, age: Number(e.target.value) })}
+              value={profile.age ?? 25}
+              onChange={(e) => setProfile({ ...profile, age: e.target.value === '' ? '' : Number(e.target.value) })}
               className="bg-background border-border text-foreground font-semibold"
             />
           </div>
@@ -473,8 +478,8 @@ export default function ProfilePage() {
             <label className="text-xs font-bold text-muted-foreground block mb-1">Height (cm)</label>
             <Input
               type="number"
-              value={profile.height_cm || 175}
-              onChange={(e) => setProfile({ ...profile, height_cm: Number(e.target.value) })}
+              value={profile.height_cm ?? 175}
+              onChange={(e) => setProfile({ ...profile, height_cm: e.target.value === '' ? '' : Number(e.target.value) })}
               className="bg-background border-border text-foreground font-semibold"
             />
           </div>
@@ -482,8 +487,8 @@ export default function ProfilePage() {
             <label className="text-xs font-bold text-muted-foreground block mb-1">Weight (kg)</label>
             <Input
               type="number"
-              value={profile.weight_kg || 70}
-              onChange={(e) => setProfile({ ...profile, weight_kg: Number(e.target.value) })}
+              value={profile.weight_kg ?? 70}
+              onChange={(e) => setProfile({ ...profile, weight_kg: e.target.value === '' ? '' : Number(e.target.value) })}
               className="bg-background border-border text-foreground font-semibold"
             />
           </div>
