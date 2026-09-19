@@ -14,6 +14,7 @@ export interface ExerciseRow {
   name: string;
   slug: string;
   description: string;
+  instructions: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   movement_pattern: string;
   exercise_type: string;

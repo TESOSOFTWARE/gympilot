@@ -29,6 +29,7 @@ export async function adminUpsertExercise(
     target_muscle: item.target_muscle ?? '',
     primary_muscle_slug: item.primary_muscle_slug ?? 'mid-chest',
     youtube_urls: item.youtube_urls ?? [],
+    instructions: item.instructions ?? '',
     is_active: item.is_active !== false,
   };
 

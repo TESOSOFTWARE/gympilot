@@ -150,6 +150,7 @@ export default function AdminExercisesPage() {
       primary_muscle_slug: editingItem.primary_muscle_slug || 'mid-chest',
       youtube_urls: editingItem.youtube_urls || [],
       description: editingItem.description || '',
+      instructions: (editingItem as ExerciseRow).instructions || '',
     });
     setSaving(false);
 
@@ -559,6 +560,17 @@ export default function AdminExercisesPage() {
                   onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
                   placeholder="Brief description of the exercise…"
                   className="bg-background border-border text-foreground font-semibold"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block mb-1">Instructions (How to perform properly)</label>
+                <textarea
+                  value={(editingItem as ExerciseRow).instructions || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, instructions: e.target.value })}
+                  placeholder={"1. Set up position...\n2. Execute the movement...\n3. Return to start...\n4. Repeat for reps."}
+                  rows={6}
+                  className="w-full px-3 py-2 rounded-md bg-background border border-border text-foreground font-semibold text-xs resize-y focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
