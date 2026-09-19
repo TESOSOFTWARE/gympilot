@@ -107,7 +107,7 @@ export default function ActiveWorkoutPage() {
               name: item.exercise?.name || 'Unknown Exercise',
               targetSets: numSets,
               repRange: item.rep_range || '10-12',
-              youtubeUrl: item.exercise?.youtube_url,
+              youtubeUrl: item.exercise?.youtube_urls?.[0],
               sets,
             };
           });
@@ -507,7 +507,7 @@ export default function ActiveWorkoutPage() {
 
               <CardContent className="p-4 space-y-3">
                 <div className="mb-4">
-                  <YouTubeEmbed url={ex.youtubeUrl || "https://www.youtube.com/shorts/8fXfwG4ftaQ"} title={`${ex.name} Demo`} />
+                  <YouTubeEmbed url={ex.youtubeUrl} title={`${ex.name} Demo`} />
                 </div>
                 <div className="grid grid-cols-12 gap-2 text-[11px] font-black uppercase text-muted-foreground px-2 tracking-wider">
                   <div className="col-span-2">SET</div>
