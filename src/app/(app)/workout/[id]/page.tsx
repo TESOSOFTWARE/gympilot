@@ -34,6 +34,7 @@ interface SetState {
 
 interface ActiveExercise {
   id: string;
+  slug?: string;
   name: string;
   targetSets: number;
   repRange: string;
@@ -104,6 +105,7 @@ export default function ActiveWorkoutPage() {
 
             return {
               id: item.exercise?.id || `ex_${idx}`,
+              slug: item.exercise?.slug,
               name: item.exercise?.name || 'Unknown Exercise',
               targetSets: numSets,
               repRange: item.rep_range || '10-12',
@@ -137,6 +139,38 @@ export default function ActiveWorkoutPage() {
     }, 1000);
     return () => clearInterval(restTimer);
   }, [restSeconds]);
+
+
+  // Fetch real youtube URLs from database if missing
+  useEffect(() => {
+    async function fetchVideos() {
+      if (exercises.length === 0) return;
+      const slugsToFetch = exercises.filter(e => !e.youtubeUrl && e.slug).map(e => e.slug);
+      if (slugsToFetch.length === 0) return;
+      
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xchymkktncaczotauhwv.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+      
+      const { data } = await supabase
+        .from('exercises')
+        .select('slug, youtube_urls')
+        .in('slug', slugsToFetch);
+        
+      if (data && data.length > 0) {
+        setExercises(prev => prev.map(ex => {
+          const dbEx = data.find(d => d.slug === ex.slug);
+          if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
+            return { ...ex, youtubeUrl: dbEx.youtube_urls[0] };
+          }
+          return ex;
+        }));
+      }
+    }
+    fetchVideos();
+  }, [exercises.length]);
 
   // Derived metrics
   const totalSetsCount = exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
