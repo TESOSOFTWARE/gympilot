@@ -181,7 +181,7 @@ export default function ActiveWorkoutPage() {
         
       if (data && data.length > 0) {
         setExercises(prev => prev.map(ex => {
-          const dbEx = data.find(d => d.slug === ex.slug);
+          const dbEx = data.find((d: any) => d.slug === ex.slug);
           if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
             return { ...ex, youtubeUrls: dbEx.youtube_urls };
           }
