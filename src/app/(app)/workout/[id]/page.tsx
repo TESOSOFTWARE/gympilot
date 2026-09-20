@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Info,
   ShieldAlert,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +68,33 @@ export default function ActiveWorkoutPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [sessionName, setSessionName] = useState('Workout Session');
 
+  const [dbExercises, setDbExercises] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMuscle, setSelectedMuscle] = useState('All');
+  const [isFetchingExercises, setIsFetchingExercises] = useState(false);
+
   const [exercises, setExercises] = useState<ActiveExercise[]>([]);
+
+
+  // Fetch all exercises for the Add Movement modal
+  useEffect(() => {
+    async function fetchAllExercises() {
+      if (showAddModal && dbExercises.length === 0) {
+        setIsFetchingExercises(true);
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xchymkktncaczotauhwv.supabase.co',
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        );
+        const { data } = await supabase.from('exercises').select('*').eq('is_active', true).order('name', { ascending: true });
+        if (data) {
+          setDbExercises(data);
+        }
+        setIsFetchingExercises(false);
+      }
+    }
+    fetchAllExercises();
+  }, [showAddModal, dbExercises.length]);
 
   // Load user profile
   useEffect(() => {
@@ -348,16 +375,18 @@ export default function ActiveWorkoutPage() {
   }
 
   // ADD NEW EXERCISE TO SESSION
-  function handleAddExercise(item: typeof ADDABLE_EXERCISES_LIBRARY[0]) {
+  function handleAddExercise(item: any) {
     const newEx: ActiveExercise = {
       id: `${item.id}_${Date.now()}`,
+      slug: item.slug,
       name: item.name,
       targetSets: 3,
-      repRange: item.repRange,
+      repRange: item.repRange || '10-12',
+      youtubeUrl: item.youtube_urls?.[0],
       sets: [
-        { setNumber: 1, weightKg: item.defaultWeight, reps: item.defaultReps, rpe: 8.0, completed: false },
-        { setNumber: 2, weightKg: item.defaultWeight, reps: item.defaultReps, rpe: 8.0, completed: false },
-        { setNumber: 3, weightKg: item.defaultWeight, reps: item.defaultReps, rpe: 8.5, completed: false },
+        { setNumber: 1, weightKg: item.defaultWeight || 20, reps: item.defaultReps || 10, rpe: 8.0, completed: false },
+        { setNumber: 2, weightKg: item.defaultWeight || 20, reps: item.defaultReps || 10, rpe: 8.0, completed: false },
+        { setNumber: 3, weightKg: item.defaultWeight || 20, reps: item.defaultReps || 10, rpe: 8.5, completed: false },
       ],
     };
 
@@ -655,20 +684,74 @@ export default function ActiveWorkoutPage() {
               </button>
             </div>
 
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {ADDABLE_EXERCISES_LIBRARY.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleAddExercise(item)}
-                  className="w-full p-3.5 rounded-xl bg-background border border-border hover:border-primary/50 hover:bg-accent text-left flex items-center justify-between transition-all group"
-                >
-                  <div>
-                    <h4 className="font-extrabold text-sm text-foreground group-hover:text-primary">{item.name}</h4>
-                    <p className="text-xs text-muted-foreground">Default Target: {item.repRange} Reps</p>
-                  </div>
-                  <Plus className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                </button>
-              ))}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search movements..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-11 bg-background border-border text-foreground font-medium"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {['All', 'Chest', 'Back', 'Shoulders', 'Legs', 'Arms', 'Core'].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setSelectedMuscle(m)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all ${
+                      selectedMuscle === m
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1 mt-4">
+              {isFetchingExercises ? (
+                <div className="p-8 text-center text-muted-foreground text-sm font-semibold">Loading library...</div>
+              ) : (
+                dbExercises
+                  .filter((ex) => {
+                    const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
+                    const targetLower = (ex.target_muscle || '').toLowerCase();
+                    let matchesMuscle = selectedMuscle === 'All';
+                    if (!matchesMuscle) {
+                      matchesMuscle = targetLower.includes(selectedMuscle.toLowerCase());
+                    }
+                    return matchesSearch && matchesMuscle;
+                  })
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        handleAddExercise(item);
+                        setSearchQuery('');
+                        setSelectedMuscle('All');
+                      }}
+                      className="w-full p-3.5 rounded-xl bg-background border border-border hover:border-primary/50 hover:bg-accent text-left flex items-center justify-between transition-all group"
+                    >
+                      <div>
+                        <h4 className="font-extrabold text-sm text-foreground group-hover:text-primary">{item.name}</h4>
+                        <p className="text-xs text-muted-foreground">Target: {item.target_muscle || 'General'}</p>
+                      </div>
+                      <Plus className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                    </button>
+                  ))
+              )}
+              {!isFetchingExercises && dbExercises.length > 0 && dbExercises.filter((ex) => {
+                const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const targetLower = (ex.target_muscle || '').toLowerCase();
+                return matchesSearch && (selectedMuscle === 'All' || targetLower.includes(selectedMuscle.toLowerCase()));
+              }).length === 0 && (
+                <div className="p-8 text-center text-muted-foreground text-sm font-semibold">
+                  No movements found. Try adjusting your filters.
+                </div>
+              )}
             </div>
           </Card>
         </div>
