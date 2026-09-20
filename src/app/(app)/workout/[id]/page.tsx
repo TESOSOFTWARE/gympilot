@@ -39,7 +39,7 @@ interface ActiveExercise {
   name: string;
   targetSets: number;
   repRange: string;
-  youtubeUrl?: string;
+  youtubeUrls?: string[];
   sets: SetState[];
 }
 
@@ -136,7 +136,7 @@ export default function ActiveWorkoutPage() {
               name: item.exercise?.name || 'Unknown Exercise',
               targetSets: numSets,
               repRange: item.rep_range || '10-12',
-              youtubeUrl: item.exercise?.youtube_urls?.[0],
+              youtubeUrls: item.exercise?.youtube_urls || (item.exercise?.youtube_url ? [item.exercise.youtube_url] : []), // handle both formats
               sets,
             };
           });
@@ -172,7 +172,7 @@ export default function ActiveWorkoutPage() {
   useEffect(() => {
     async function fetchVideos() {
       if (exercises.length === 0) return;
-      const slugsToFetch = exercises.filter(e => !e.youtubeUrl && e.slug).map(e => e.slug);
+      const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length === 0) && e.slug).map(e => e.slug);
       if (slugsToFetch.length === 0) return;
       
       const { createClient } = await import('@supabase/supabase-js');
@@ -190,7 +190,7 @@ export default function ActiveWorkoutPage() {
         setExercises(prev => prev.map(ex => {
           const dbEx = data.find(d => d.slug === ex.slug);
           if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
-            return { ...ex, youtubeUrl: dbEx.youtube_urls[0] };
+            return { ...ex, youtubeUrls: dbEx.youtube_urls };
           }
           return ex;
         }));
@@ -382,7 +382,7 @@ export default function ActiveWorkoutPage() {
       name: item.name,
       targetSets: 3,
       repRange: item.repRange || '10-12',
-      youtubeUrl: item.youtube_urls?.[0],
+      youtubeUrls: item.youtube_urls,
       sets: [
         { setNumber: 1, weightKg: item.defaultWeight || 20, reps: item.defaultReps || 10, rpe: 8.0, completed: false },
         { setNumber: 2, weightKg: item.defaultWeight || 20, reps: item.defaultReps || 10, rpe: 8.0, completed: false },
@@ -570,7 +570,17 @@ export default function ActiveWorkoutPage() {
 
               <CardContent className="p-4 space-y-3">
                 <div className="mb-4">
-                  <YouTubeEmbed url={ex.youtubeUrl} title={`${ex.name} Demo`} />
+                  {ex.youtubeUrls && ex.youtubeUrls.length > 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x scrollbar-hide">
+                      {ex.youtubeUrls.map((url, i) => (
+                        <div key={i} className="min-w-[280px] sm:min-w-[320px] snap-start shrink-0">
+                          <YouTubeEmbed url={url} title={`${ex.name} Demo ${i+1}`} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <YouTubeEmbed url={undefined} title={`${ex.name} Demo`} />
+                  )}
                 </div>
                 <div className="grid grid-cols-12 gap-2 text-[11px] font-black uppercase text-muted-foreground px-2 tracking-wider">
                   <div className="col-span-2">SET</div>
