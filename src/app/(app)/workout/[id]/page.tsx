@@ -83,7 +83,7 @@ export default function ActiveWorkoutPage() {
       if (showAddModal && dbExercises.length === 0) {
         setIsFetchingExercises(true);
         const supabase = createClient();
-        const { data } = await supabase.from('exercises').select('*').eq('is_active', true).order('name', { ascending: true });
+        const { data } = await (supabase as any).from('exercises').select('*').eq('is_active', true).order('name', { ascending: true });
         if (data) {
           setDbExercises(data);
         }
@@ -174,7 +174,7 @@ export default function ActiveWorkoutPage() {
       
       const supabase = createClient();
       
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('exercises')
         .select('slug, youtube_urls')
         .in('slug', slugsToFetch);
