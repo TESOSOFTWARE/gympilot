@@ -165,28 +165,41 @@ export default function ActiveWorkoutPage() {
   }, [restSeconds]);
 
 
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   // Fetch real youtube URLs from database if missing
   useEffect(() => {
     async function fetchVideos() {
-      if (exercises.length === 0) return;
-      const namesToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length < 2) && e.name).map(e => e.name);
-      if (namesToFetch.length === 0) return;
-      
-      const supabase = createClient();
-      
-      const { data } = await (supabase as any)
-        .from('exercises')
-        .select('name, youtube_urls')
-        .in('name', namesToFetch);
+      try {
+        if (exercises.length === 0) return;
+        const namesToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length < 2) && e.name).map(e => e.name);
+        if (namesToFetch.length === 0) return;
         
-      if (data && data.length > 0) {
-        setExercises(prev => prev.map(ex => {
-          const dbEx = data.find((d: any) => d.name === ex.name);
-          if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
-            return { ...ex, youtubeUrls: dbEx.youtube_urls };
-          }
-          return ex;
-        }));
+        const supabase = createClient();
+        
+        const { data, error } = await (supabase as any)
+          .from('exercises')
+          .select('name, youtube_urls')
+          .in('name', namesToFetch);
+
+        if (error) {
+          setFetchError('Supabase Error: ' + error.message);
+          return;
+        }
+          
+        if (data && data.length > 0) {
+          setExercises(prev => prev.map(ex => {
+            const dbEx = data.find((d: any) => d.name === ex.name);
+            if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
+              return { ...ex, youtubeUrls: dbEx.youtube_urls };
+            }
+            return ex;
+          }));
+        } else {
+          setFetchError('No videos found in DB for: ' + namesToFetch.join(', '));
+        }
+      } catch (err: any) {
+        setFetchError('Catch Error: ' + err.message);
       }
     }
     fetchVideos();
@@ -494,6 +507,11 @@ export default function ActiveWorkoutPage() {
             </Button>
           </div>
         </div>
+        {fetchError && (
+          <div className="mt-4 p-4 bg-red-500/10 border border-red-500 text-red-500 text-sm rounded-xl">
+            <strong>Debug Error:</strong> {fetchError}
+          </div>
+        )}
 
         {/* Integrated Session Volume & Safety Warning Bar (Sticky along with header) */}
         <div
