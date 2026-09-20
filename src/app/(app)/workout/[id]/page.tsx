@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getGuestData, saveWorkoutRecord, WorkoutSessionRecord } from '@/stores/guest-store';
 import { YouTubeEmbed } from '@/components/exercises/YouTubeEmbed';
+import { createClient } from '@/lib/supabase/client';
 
 interface SetState {
   setNumber: number;
@@ -81,7 +82,6 @@ export default function ActiveWorkoutPage() {
     async function fetchAllExercises() {
       if (showAddModal && dbExercises.length === 0) {
         setIsFetchingExercises(true);
-        const { createClient } = await import('@/lib/supabase/client');
         const supabase = createClient();
         const { data } = await supabase.from('exercises').select('*').eq('is_active', true).order('name', { ascending: true });
         if (data) {
@@ -172,7 +172,6 @@ export default function ActiveWorkoutPage() {
       const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length === 0) && e.slug).map(e => e.slug);
       if (slugsToFetch.length === 0) return;
       
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       
       const { data } = await supabase
