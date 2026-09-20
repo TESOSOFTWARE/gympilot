@@ -169,7 +169,7 @@ export default function ActiveWorkoutPage() {
   useEffect(() => {
     async function fetchVideos() {
       if (exercises.length === 0) return;
-      const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length === 0) && e.slug).map(e => e.slug);
+      const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length < 2) && e.slug).map(e => e.slug);
       if (slugsToFetch.length === 0) return;
       
       const supabase = createClient();
