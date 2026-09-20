@@ -169,19 +169,19 @@ export default function ActiveWorkoutPage() {
   useEffect(() => {
     async function fetchVideos() {
       if (exercises.length === 0) return;
-      const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length < 2) && e.slug).map(e => e.slug);
-      if (slugsToFetch.length === 0) return;
+      const namesToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length < 2) && e.name).map(e => e.name);
+      if (namesToFetch.length === 0) return;
       
       const supabase = createClient();
       
       const { data } = await (supabase as any)
         .from('exercises')
-        .select('slug, youtube_urls')
-        .in('slug', slugsToFetch);
+        .select('name, youtube_urls')
+        .in('name', namesToFetch);
         
       if (data && data.length > 0) {
         setExercises(prev => prev.map(ex => {
-          const dbEx = data.find((d: any) => d.slug === ex.slug);
+          const dbEx = data.find((d: any) => d.name === ex.name);
           if (dbEx && dbEx.youtube_urls && dbEx.youtube_urls.length > 0) {
             return { ...ex, youtubeUrls: dbEx.youtube_urls };
           }
@@ -564,7 +564,7 @@ export default function ActiveWorkoutPage() {
               <CardContent className="p-4 space-y-3">
                 <div className="mb-4">
                   {ex.youtubeUrls && ex.youtubeUrls.length > 0 ? (
-                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x scrollbar-hide">
+                    <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x">
                       {ex.youtubeUrls.map((url, i) => (
                         <div key={i} className="min-w-[280px] sm:min-w-[320px] snap-start shrink-0">
                           <YouTubeEmbed url={url} title={`${ex.name} Demo ${i+1}`} />
