@@ -81,11 +81,8 @@ export default function ActiveWorkoutPage() {
     async function fetchAllExercises() {
       if (showAddModal && dbExercises.length === 0) {
         setIsFetchingExercises(true);
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xchymkktncaczotauhwv.supabase.co',
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-        );
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
         const { data } = await supabase.from('exercises').select('*').eq('is_active', true).order('name', { ascending: true });
         if (data) {
           setDbExercises(data);
@@ -175,11 +172,8 @@ export default function ActiveWorkoutPage() {
       const slugsToFetch = exercises.filter(e => (!e.youtubeUrls || e.youtubeUrls.length === 0) && e.slug).map(e => e.slug);
       if (slugsToFetch.length === 0) return;
       
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xchymkktncaczotauhwv.supabase.co',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      );
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
       
       const { data } = await supabase
         .from('exercises')
